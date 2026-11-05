@@ -26,4 +26,52 @@ CachedCountryProvider  →  αν υπάρχουν στη cache, τις δίνε�
    ↓ αλλιώς
 RestCountriesProvider  →  τις φέρνει από το restcountries.com
 
-## ...
+## Εγκατάσταση και εκτέλεση
+
+### Προαπαιτούμενα
+
+- PHP 8.2 ή νεότερο και Composer
+- Node.js (LTS ή νεότερο) και npm
+- Δωρεάν API key από το [REST Countries](https://restcountries.com/sign-up)
+
+### Backend (Laravel)
+
+```bash
+cd backend
+composer install
+cp .env.example .env
+php artisan key:generate
+```
+
+Στο αρχείο `backend/.env` συμπλήρωσε το API key:
+
+```
+RESTCOUNTRIES_API_KEY=το_κλειδί_σου (https://restcountries.com/sign-up)
+RESTCOUNTRIES_BASE_URL=https://api.restcountries.com/countries/v5
+```
+
+Το αρχείο `.env` δεν ανεβαίνει στο repository. Γι' αυτό υπάρχει το `.env.example`, που δείχνει ποιες μεταβλητές χρειάζονται.
+
+Εκκίνηση του server:
+
+```bash
+php artisan serve
+```
+
+Το backend τρέχει στο `http://localhost:8000` και το endpoint είναι το `http://localhost:8000/api/countries`.
+
+### Frontend (Vue)
+
+Σε δεύτερο τερματικό:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Το frontend τρέχει στο `http://localhost:5173`.
+
+### Σημείωση για το εξωτερικό API
+
+Το δωρεάν πακέτο του REST Countries επιστρέφει το πολύ 100 χώρες ανά αίτημα, οπότε ο provider ζητά τη λίστα σε σελίδες. Το αποτέλεσμα αποθηκεύεται στη cache για 24 ώρες, ώστε το API να μην καλείται σε κάθε επίσκεψη και να μην εξαντλείται το μηνιαίο όριο αιτημάτων.
