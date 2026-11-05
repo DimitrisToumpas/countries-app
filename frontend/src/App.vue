@@ -25,7 +25,7 @@ onMounted(async () => {
   <main class="container">
     <header>
       <h1>Countries Explorer</h1>
-      <p>Explore countries around the world</p>
+      <p>Total countries: {{ countries.length }}</p>
     </header>
 
     <!-- Loading state -->
@@ -52,6 +52,7 @@ onMounted(async () => {
   max-width: 1200px;
   margin: 0 auto;
   padding: 40px 24px;
+  background: #120b5a2a;
 }
 
 header {
