@@ -3,13 +3,44 @@ import { ref, onMounted } from 'vue'
 import { getCountries } from './services/countryService'
 import CountryCard from './components/CountryCard.vue'
 
-// reactive variables
 const countries = ref([])
 const loading = ref(true)
 const error = ref(null)
+const checkingAuth = ref(true)
 
-// call api οταν φορτωνει η σελιδα
-onMounted(async () => {
+const checkAuthentication = async () => {
+  try {
+    const response = await fetch(
+      'http://localhost:8000/api/auth/user',
+      {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          Accept: 'application/json'
+        }
+      }
+    )
+
+    if (response.status === 401) {
+      window.location.href = 'http://localhost:8000/login'
+      return false
+    }
+
+    if (!response.ok) {
+      throw new Error('Authentication check failed')
+    }
+
+    return true
+  } catch (err) {
+    console.error(err)
+    error.value = 'Unable to verify authentication.'
+    return false
+  } finally {
+    checkingAuth.value = false
+  }
+}
+
+const loadCountries = async () => {
   try {
     countries.value = await getCountries()
   } catch (err) {
@@ -18,13 +49,21 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+}
+
+onMounted(async () => {
+  const authenticated = await checkAuthentication()
+
+  if (authenticated) {
+    await loadCountries()
+  }
 })
 </script>
 
 <template>
   <main class="container">
     <header>
-      <h1>Countries Explorer</h1>
+      <h1>Show Countries</h1>
       <p>Total countries: {{ countries.length }}</p>
     </header>
 
@@ -63,6 +102,7 @@ header {
 header h1 {
   font-size: 2.5rem;
   margin-bottom: 8px;
+  color: #040c4b;
 }
 
 header p {
