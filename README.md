@@ -1,77 +1,52 @@
 # Countries App
 
-Μια μικρή single-page web εφαρμογή που εμφανίζει όλες τις χώρες του κόσμου μαζί με τις σημαίες τους, σε responsive grid. Η πρόσβαση στην εφαρμογή απαιτεί authentication μέσω Auth0.
-
+Single-page web εφαρμογή που εμφανίζει όλες τις χώρες του κόσμου μαζί με τις σημαίες τους, σε responsive grid. Η πρόσβαση απαιτεί authentication μέσω Auth0.
 
 ## Τεχνολογίες
 
-- **Backend:** Laravel (PHP), Laravel HTTP client, Laravel Cache
-- **Frontend:** Vue 3, Vite, Tailwind CSS
-- **Authentication:** Auth0 (`@auth0/auth0-vue` στο frontend, επαλήθευση JWT στο backend)
-- **Εξωτερική πηγή δεδομένων:** REST Countries API
+- **Backend:** Laravel, PHP, Laravel HTTP Client, Laravel Cache
+- **Frontend:** Vue 3, Vite
+- **Authentication:** Auth0
+- **External API:** REST Countries API
+- **Containerization:** Docker, Docker Compose
 
-## Δομή του project
+## Αρχιτεκτονική
 
-Το repository περιέχει δύο ανεξάρτητα projects, ένα για τον server και ένα για τον client
+Το project αποτελείται από δύο ανεξάρτητα applications:
 
-## Πως δουλεύει 
+- **Backend:** Ανακτά τα ονόματα των χωρών και τα URLs των σημαιών από το REST Countries API και τα διαθέτει μέσω του `/api/countries`.
+- **Frontend:** Ζητά τα δεδομένα από το Laravel backend και εμφανίζει τις χώρες σε responsive grid.
+- **Authentication:** Η αυθεντικοποίηση των χρηστών πραγματοποιείται μέσω Auth0. Οι χώρες εμφανίζονται μόνο μετά από επιτυχημένη σύνδεση, ενώ οι μη αυθεντικοποιημένοι χρήστες ανακατευθύνονται στη διαδικασία σύνδεσης του Auth0.
+- **Caching:** Τα δεδομένα των χωρών αποθηκεύονται στην Laravel Cache για 6 ώρες, (μέσα στο CountryController).
 
-Το backend (Laravel) παίρνει τα ονόματα των χωρών και τα URLs των σημαιών από το [REST Countries API](https://restcountries.com/) και τα σερβίρει μέσω του δικού του JSON endpoint. Το frontend (Vue.js) καλεί αυτό το endpoint και εμφανίζει το grid.
+* CountryProvider: Είναι το interface που ορίζει τη μέθοδο allCountries().
 
-Vue (frontend)
-   ↓ ζητάει /api/countries
-CountryController
-   ↓ ζητάει τις χώρες από το interface
-CachedCountryProvider  →  αν υπάρχουν στη cache, τις δίνει
-   ↓ αλλιώς
-RestCountriesProvider  →  τις φέρνει από το restcountries.com
+* RestCountriesProvider: Υλοποιεί το CountryProvider και περιέχει τη λογική ανάκτησης των χωρών από το REST Countries API.
 
-## Εγκατάσταση και εκτέλεση
+* CountryController: Καλεί τη μέθοδο allCountries() μέσω του CountryProvider, ενώ αναλαμβάνει και το caching των αποτελεσμάτων μέσω Cache::remember().
 
-### Προαπαιτούμενα
+## Προαπαιτούμενα
 
-- PHP 8.2 ή νεότερο και Composer
-- Node.js (LTS ή νεότερο) και npm
-- Δωρεάν API key από το [REST Countries](https://restcountries.com/sign-up)
+- Docker Desktop ή Docker Engine
+- Docker Compose
+- Λογαριασμός Auth0
+- REST Countries API key, εφόσον απαιτείται από το API plan
 
-### Backend (Laravel)
+## Ρύθμιση περιβάλλοντος
 
-```bash
-cd backend
-composer install
-cp .env.example .env
-php artisan key:generate
-```
+Πριν από την εκτέλεση:
 
-Στο αρχείο `backend/.env` συμπλήρωσε το API key:
+Δημιούργησε το αρχείο `backend/.env`, αντιγράφοντας το `backend/.env.example`.
+Συμπλήρωσε τα απαραίτητα Auth0 credentials, βεβαιώσου ότι υπάρχουν και οι απαραίτητες μεταβλητές περιβάλλοντος.
 
-```
-RESTCOUNTRIES_API_KEY=το_κλειδί_σου (https://restcountries.com/sign-up)
-RESTCOUNTRIES_BASE_URL=https://api.restcountries.com/countries/v5
-```
+### Λήψη του project
 
-Το αρχείο `.env` δεν ανεβαίνει στο repository. Γι' αυτό υπάρχει το `.env.example`, που δείχνει ποιες μεταβλητές χρειάζονται.
+clone [DimitrisToumpas/countries-app](https://github.com/DimitrisToumpas/countries-app.git)
+από τον root φακελο "countries-app"
+εκτέλεσε : docker compose build
 
-Εκκίνηση του server:
+### Εκκίνηση της εφαρμογής
 
-```bash
-php artisan serve
-```
+εκτέλεσε : docker compose up
 
-Το backend τρέχει στο `http://localhost:8000` και το endpoint είναι το `http://localhost:8000/api/countries`.
-
-### Frontend (Vue)
-
-Σε δεύτερο τερματικό:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Το frontend τρέχει στο `http://localhost:5173`.
-
-### Σημείωση για το εξωτερικό API
-
-Το δωρεάν πακέτο του REST Countries επιστρέφει το πολύ 100 χώρες ανά αίτημα, οπότε ο provider ζητά τη λίστα σε σελίδες. Το αποτέλεσμα αποθηκεύεται στη cache για 24 ώρες, ώστε το API να μην καλείται σε κάθε επίσκεψη και να μην εξαντλείται το μηνιαίο όριο αιτημάτων.
+> **Σημείωση:** Οι παραπάνω διευθύνσεις ισχύουν μέσω Docker Compose. Αν εκτελέσεις την εφαρμογή χωρίς Docker, θα πρέπει να ξεκινήσεις ξεχωριστά το backend (Laravel) και το frontend (Vue/Vite), ακολουθώντας τις αντίστοιχες διαδικασίες εκκίνησης.
